@@ -5,7 +5,9 @@ import (
 	"docket-beego/utils"
 	"fmt"
 
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/core/validation"
+	"github.com/beego/beego/v2/server/web/pagination"
 	"github.com/google/uuid"
 )
 
@@ -54,8 +56,8 @@ func (ctrl *UserController) Register(apiVersion *string, newUserBody *RegisterUs
 	errs, _ := newUserBody.validate()
 
 	if len(errs) > 0 {
-		responseErr := utils.GetErrorResponse(*ctrl.Ctx, utils.GetValidationError(errs), nil)
-		return &responseErr
+		// responseErr := utils.GetErrorResponse(*ctrl.Ctx, utils.GetValidationError(), nil)
+		// return &responseErr
 	}
 
 	doesUserExist := models.Orm.QueryTable("users").Filter("username", *newUserBody.Username).Exist()
@@ -90,8 +92,38 @@ func (ctrl *UserController) Register(apiVersion *string, newUserBody *RegisterUs
 	return &response
 }
 
-// @Param   apiVersion     query   string false "v1"       ""
+// @Param   apiVersion     query   string false "v1"
 // @router	/	[get]
 func (ctrl *UserController) GetUsers(apiVersion *string) *utils.GenericResponse {
-	return &utils.GenericResponse{}
+
+	qs := models.Orm.QueryTable(models.User{})
+	// ctrl.Ctx.Re
+
+	pgF := utils.NewPaginationQuery()
+
+	if err := ctrl.ParseForm(&pgF); err != nil {
+		logs.Error(err)
+	} else {
+		logs.Info("No err")
+	}
+
+	paginatedQs, _, err := utils.GetPagninatedQs(pgF, ctrl.Ctx.Request, qs)
+
+	if err != nil {
+		logs.Error(err)
+	}
+
+	result := []models.User{}
+
+	_, err = paginatedQs.All(&result)
+
+	if err != nil {
+		logs.Error(err)
+	}
+
+	pagination.SetPaginator(ctrl.Ctx, 5, 10)
+
+	response := utils.GetSuccessResponse(*ctrl.Ctx, result, 201, nil)
+
+	return &response
 }

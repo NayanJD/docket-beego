@@ -18,8 +18,20 @@ func init() {
 
     beego.GlobalControllerRouter["docket-beego/controllers:TaskController"] = append(beego.GlobalControllerRouter["docket-beego/controllers:TaskController"],
         beego.ControllerComments{
+            Method: "CreateTask",
+            Router: "/",
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(
+				param.New("apiVersion"),
+				param.New("newTaskBody", param.IsRequired, param.InBody),
+			),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["docket-beego/controllers:TaskController"] = append(beego.GlobalControllerRouter["docket-beego/controllers:TaskController"],
+        beego.ControllerComments{
             Method: "GetTask",
-            Router: "/task",
+            Router: "/",
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(
 				param.New("apiVersion"),

@@ -16,6 +16,10 @@
     "basePath": "/api",
     "paths": null,
     "definitions": {
+        "{CreateTaskBody}": {
+            "title": "{CreateTaskBody}",
+            "type": "object"
+        },
         "{RegisterUserBody}": {
             "title": "{RegisterUserBody}",
             "type": "object"

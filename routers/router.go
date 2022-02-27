@@ -23,8 +23,10 @@ func init() {
 					&controllers.OauthController{},
 				),
 			),
-			beego.NSInclude(
-				controllers.NewTaskController(),
+			beego.NSNamespace("/task",
+				beego.NSInclude(
+					controllers.NewTaskController(),
+				),
 			),
 			beego.NSNamespace("/user", beego.NSInclude(controllers.NewUserController())),
 		),
