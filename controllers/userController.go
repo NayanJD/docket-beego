@@ -6,36 +6,14 @@ import (
 	"fmt"
 
 	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/core/validation"
-	"github.com/beego/beego/v2/server/web/pagination"
 	"github.com/google/uuid"
 )
 
 type RegisterUserBody struct {
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
-	Username  *string `json:"username"`
-	Password  *string `json:"password"`
-}
-
-func (b *RegisterUserBody) validate() ([]*validation.Error, error) {
-	valid := validation.Validation{}
-	valid.Required(b.FirstName, "first_name")
-	valid.Required(b.LastName, "last_name")
-	valid.Required(b.Username, "username")
-	valid.Required(b.Password, "password")
-
-	ok, err := valid.Valid(b)
-
-	if err != nil {
-		return nil, err
-	} else {
-		if !ok {
-			return valid.Errors, nil
-		}
-
-		return nil, nil
-	}
+	FirstName *string `json:"first_name" validate:"required"`
+	LastName  *string `json:"last_name" validate:"required"`
+	Username  *string `json:"username" validate:"required"`
+	Password  *string `json:"password" validate:"required"`
 }
 
 type UserController struct {
@@ -53,11 +31,11 @@ func (ctrl *UserController) Register(apiVersion *string, newUserBody *RegisterUs
 	newId := uuid.New().String()
 	isSuperuser := false
 	isStaff := false
-	errs, _ := newUserBody.validate()
+	verr, _ := utils.ValidatePayload(newUserBody)
 
-	if len(errs) > 0 {
-		// responseErr := utils.GetErrorResponse(*ctrl.Ctx, utils.GetValidationError(), nil)
-		// return &responseErr
+	if verr != nil {
+		responseErr := utils.GetErrorResponse(*ctrl.Ctx, utils.GetValidationError(verr), nil)
+		return &responseErr
 	}
 
 	doesUserExist := models.Orm.QueryTable("users").Filter("username", *newUserBody.Username).Exist()
@@ -97,20 +75,13 @@ func (ctrl *UserController) Register(apiVersion *string, newUserBody *RegisterUs
 func (ctrl *UserController) GetUsers(apiVersion *string) *utils.GenericResponse {
 
 	qs := models.Orm.QueryTable(models.User{})
-	// ctrl.Ctx.Re
 
-	pgF := utils.NewPaginationQuery()
-
-	if err := ctrl.ParseForm(&pgF); err != nil {
-		logs.Error(err)
-	} else {
-		logs.Info("No err")
-	}
-
-	paginatedQs, _, err := utils.GetPagninatedQs(pgF, ctrl.Ctx.Request, qs)
+	paginatedQs, err := utils.GetPagninatedQs(ctrl.Controller, qs)
 
 	if err != nil {
 		logs.Error(err)
+		responseErr := utils.GetErrorResponse(*ctrl.Ctx, utils.InternalError, nil)
+		return &responseErr
 	}
 
 	result := []models.User{}
@@ -119,9 +90,9 @@ func (ctrl *UserController) GetUsers(apiVersion *string) *utils.GenericResponse 
 
 	if err != nil {
 		logs.Error(err)
+		responseErr := utils.GetErrorResponse(*ctrl.Ctx, utils.InternalError, nil)
+		return &responseErr
 	}
-
-	pagination.SetPaginator(ctrl.Ctx, 5, 10)
 
 	response := utils.GetSuccessResponse(*ctrl.Ctx, result, 201, nil)
 

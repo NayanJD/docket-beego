@@ -1,11 +1,13 @@
 package utils
 
 import (
-	"net/http"
-
 	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/core/utils/pagination"
+	beego "github.com/beego/beego/v2/server/web"
 )
+
+var PAGINATION_DATA_KEY string = "pagination"
 
 var defaultPageSize int = 5
 
@@ -16,10 +18,10 @@ var defaultSortOrder string = "ASC"
 var defaultPageNumber int = 1
 
 type PaginationQuery struct {
-	Page       int    `form:"page"`
-	PageSize   int    `form:"page_size"`
-	SortColumn string `form:"sort_attr"`
-	SortOrder  string `form:"order"`
+	Page       int    `json:"page" form:"page"`
+	PageSize   int    `json:"page_size" form:"page_size"`
+	SortColumn string `json:"sort_attr" form:"sort_attr"`
+	SortOrder  string `json:"order" form:"order"`
 }
 
 type Paginator struct {
@@ -46,14 +48,28 @@ func (p *Paginator) Page() int {
 	return p.page
 }
 
-func GetPagninatedQs(pq PaginationQuery, req *http.Request, qs orm.QuerySeter) (orm.QuerySeter, *Paginator, error) {
-	count, err := qs.Count()
+func GetPagninatedQs(ctrl beego.Controller, qs orm.QuerySeter) (orm.QuerySeter, error) {
+
+	pgF := NewPaginationQuery()
+
+	req := ctrl.Ctx.Request
+
+	err := req.ParseForm()
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	paginator := &Paginator{Paginator: pagination.NewPaginator(req, pq.PageSize, count), page: pq.Page}
+	if err := beego.ParseForm(req.Form, &pgF); err != nil {
+		logs.Error(err)
+		return nil, err
+	}
 
-	return qs.OrderBy(pq.SortColumn).Limit(pq.PageSize).Offset(paginator.Offset()), paginator, nil
+	count, _ := qs.Count()
+
+	paginator := &Paginator{Paginator: pagination.NewPaginator(req, pgF.PageSize, count), page: pgF.Page}
+
+	ctrl.Ctx.Input.SetData(PAGINATION_DATA_KEY, pgF)
+
+	return qs.OrderBy(pgF.SortColumn).Limit(pgF.PageSize).Offset(paginator.Offset()), nil
 }

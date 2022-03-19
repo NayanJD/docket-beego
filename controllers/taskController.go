@@ -1,13 +1,11 @@
 package controllers
 
 import (
-	"fmt"
-
 	"docket-beego/models"
 	"docket-beego/utils"
 
 	"github.com/beego/beego/v2/core/logs"
-	"github.com/go-playground/validator/v10"
+	"github.com/beego/beego/v2/server/web/pagination"
 	"github.com/google/uuid"
 )
 
@@ -15,20 +13,7 @@ import (
 
 type CreateTaskBody struct {
 	Description string `json:"description" validate:"required"`
-	ScheduledAt string `validate:"required,datetime=2006-01-02T15:04:05Z|datetime=2006-01-02T15:04:05+0000" json:"scheduled_at"`
-}
-
-func (b *CreateTaskBody) validate() (*validator.ValidationErrors, error) {
-	err := utils.Validator.Struct(b)
-
-	switch v := err.(type) {
-	case *validator.InvalidValidationError:
-		panic("InvalidValidationError thrown")
-	case validator.ValidationErrors:
-		return &v, nil
-	default:
-		return nil, nil
-	}
+	ScheduledAt string `json:"scheduled_at" validate:"required,datetime=2006-01-02T15:04:05Z|datetime=2006-01-02T15:04:05+0000"`
 }
 
 type TaskController struct {
@@ -52,7 +37,7 @@ func (ctrl *TaskController) New() TaskController {
 // @router	/	[post]
 func (ctrl *TaskController) CreateTask(apiVersion *string, newTaskBody *CreateTaskBody) *utils.GenericResponse {
 
-	verr, _ := newTaskBody.validate()
+	verr, _ := utils.ValidatePayload(newTaskBody)
 
 	logs.Error(verr)
 
@@ -92,17 +77,23 @@ func (ctrl *TaskController) CreateTask(apiVersion *string, newTaskBody *CreateTa
 // @router	/	[get]
 func (ctrl *TaskController) GetTask(apiVersion *string) *utils.GenericResponse {
 
-	result := []models.Task{}
+	qs := models.Orm.QueryTable(models.Task{})
 
-	_, err := models.Orm.QueryTable("tasks").Filter("user_id", ctrl.user.Id).All(&result)
-
-	// for _, task := range result {
-	// 	fmt.Println(task.User)
-	// }
+	paginatedQs, err := utils.GetPagninatedQs(ctrl.Controller, qs)
 
 	if err != nil {
-		fmt.Println(err)
+		logs.Error(err)
 	}
+
+	result := []models.Task{}
+
+	_, err = paginatedQs.Filter("user_id", ctrl.user.Id).All(&result)
+
+	if err != nil {
+		logs.Error(err)
+	}
+
+	pagination.SetPaginator(ctrl.Ctx, 5, 10)
 
 	response := utils.GetSuccessResponse(*ctrl.Ctx, result, 200, nil)
 

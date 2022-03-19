@@ -41,3 +41,16 @@ func ParseTime(timeString string) (*time.Time, error) {
 		return &t, nil
 	}
 }
+
+func ValidatePayload(b interface{}) (*validator.ValidationErrors, error) {
+	err := Validator.Struct(b)
+
+	switch v := err.(type) {
+	case *validator.InvalidValidationError:
+		panic("InvalidValidationError thrown")
+	case validator.ValidationErrors:
+		return &v, nil
+	default:
+		return nil, nil
+	}
+}

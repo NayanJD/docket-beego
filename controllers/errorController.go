@@ -16,7 +16,13 @@ func (ctrl *ErrorController) ErrorDb() {
 	ctrl.Data["json"] = "database is now down"
 }
 
-func (ctrl *ErrorController) Render() error {
+func (ctrl *ErrorController) Error500() {
+	ctrl.Data["json"] = "Internal server error"
 	ctrl.ServeJSON()
-	return nil
 }
+
+// func (ctrl *ErrorController) Render() error {
+// 	ctrl.Data["json"] = "Internal server error"
+// 	ctrl.ServeJSON()
+// 	return nil
+// }
