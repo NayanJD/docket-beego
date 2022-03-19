@@ -26,7 +26,7 @@ func init() {
 
 	SqlConnString = sqlConn
 
-	orm.RegisterDataBase("default", "postgres", SqlConnString)
+	orm.RegisterDataBase("default", "postgres", sqlConn)
 
 	Orm = orm.NewOrm()
 }
