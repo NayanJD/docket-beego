@@ -1,7 +1,8 @@
 FROM golang:1.17
 
-ENV GIN_MODE=release
-ENV PORT=8000
+ENV RUN_MODE=prod
+ENV PORT=8080
+ENV DB_CONN_STR=postgres://beego:password@localhost:5432/docket_local2?sslmode=disable
 
 WORKDIR /go/src
 
