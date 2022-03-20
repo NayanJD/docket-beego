@@ -19,6 +19,8 @@ RUN CGO_ENABLED=0 go build -ldflags '-d -w -s'
 
 RUN chmod +x ./startup.sh
 
+RUN go get github.com/beego/bee/v2
+
 # Set the entrypoint
 ENTRYPOINT [ "./startup.sh" ]
 
