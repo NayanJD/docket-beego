@@ -1,17 +1,27 @@
-FROM golang:1.17
+FROM library/golang:1.17
 
 ENV RUN_MODE=prod
 ENV PORT=8080
 ENV DB_CONN_STR=postgres://beego:password@localhost:5432/docket_local2?sslmode=disable
+ENV APP_DIR $GOPATH/Users/nayan/Sites/projects/experiments/go/docket-beego
 
-WORKDIR /go/src
+EXPOSE 8080
 
-COPY . /go/src
+WORKDIR $APP_DIR
 
-RUN go mod download
+ADD . $APP_DIR
 
-RUN go build
+# Recompile the standard library without CGO
+RUN CGO_ENABLED=0 go install -a std
 
-CMD ["/go/src/docket-beego"]
+# Compile the binary and statically link
+RUN CGO_ENABLED=0 go build -ldflags '-d -w -s'
 
-# CMD ["sleep", "infinity"]
+RUN chmod +x ./startup.sh
+
+# Set the entrypoint
+ENTRYPOINT [ "./startup.sh" ]
+
+
+
+
