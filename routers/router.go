@@ -12,6 +12,7 @@ import (
 	"docket-beego/utils"
 
 	beego "github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 func init() {
@@ -35,4 +36,8 @@ func init() {
 		),
 	)
 	beego.AddNamespace(ns)
+
+	beego.Get("/healthz", func(ctx *context.Context) {
+		ctx.Output.Body([]byte("I am healthy"))
+	})
 }
