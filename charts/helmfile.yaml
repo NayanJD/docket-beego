@@ -4,3 +4,8 @@ releases:
     chart: "./postgres"
     values:
       - ./postgres/values.yaml
+  - name: app
+    namespace: dev
+    chart: "./app"
+    values:
+     - ./app/values.yaml

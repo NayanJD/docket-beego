@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apiserver-config
+data:
+  PORT: "8080"
+  RUN_MODE: prod

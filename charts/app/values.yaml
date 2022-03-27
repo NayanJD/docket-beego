@@ -1,0 +1,18 @@
+apiserver:
+  name: apiserver
+  replicas: 1
+  initContainer:
+    name: apiserver-migrate
+  image: asia.gcr.io/docket-344620/docket-beego:latest
+  port: 8080
+
+apiserverService:
+  name: apiserver-service
+  port: 8080
+  
+apiServerConfigMap:
+  name: apiserver-config
+
+apiServerSecret:
+  name: apiserver-secret
+  dbConnStr: cG9zdGdyZXM6Ly9wb3N0Z3Jlczp0ZXN0cGFzc3dvcmRAcGctZGItbGI6NTQzMi9kb2NrZXQ/c3NsbW9kZT1kaXNhYmxl
